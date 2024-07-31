@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shopping Cart Website</title>
+    <link href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.5.0/font/bootstrap-icons.css">
+    <style>
+        body {
+            padding-top: 56px;
+        }
+        .sidebar {
+            position: fixed;
+            top: 56px;
+            left: 0;
+            bottom: 0;
+            width: 250px;
+            background-color: #f8f9fa;
+            padding: 1rem;
+        }
+        .main-content {
+            margin-left: 250px;
+            padding: 1rem;
+        }
+        .cart-item-img {
+            width: 70px;
+            height: 60px;
+        }
+    </style>
+</head>
+<body>
+
+<nav class="navbar navbar-expand-lg navbar-light bg-light fixed-top">
+    <a class="navbar-brand" href="#">Welcome to New Buy</a>
+    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="navbarNav">
+        <ul class="navbar-nav ml-auto">
+            <li class="nav-item">
+                <a class="nav-link" href="index.html">Home</a>
+            </li>
+            
+            <li class="nav-item">
+                <a class="nav-link" href="login.html">Sign In</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="#">Cart <span id="cart-count" class="badge badge-pill badge-primary">0</span></a>
+            </li>
+        </ul>
+    </div>
+</nav>
+
+<div class="sidebar">
+    <h5>Select Category</h5>
+    <div class="dropdown">
+        
+       
+            <select class="form-select">
+
+                <option cloptionss="dropdown-item" >ALL</option>
+                <option class="dropdown-item" >ELECTRONICS</option>
+                <option class="dropdown-item" >JEWELERY</option>
+                <option class="dropdown-item" >MEN'S CLOTHING</option>
+                <option class="dropdown-item" >WOMEN'S CLOTHING</option>
+            </select>
+           
+        
+    </div>
+</div>
+
+<div class="main-content">
+    <div id="product-list" class="d-flex flex-wrap">
+       
+    </div>
+</div>
+
+<aside class="col-4 p-1" style="position:fixed;right:0;top:56px;background-color:white;height:100vh;overflow:auto;">
+    <button class="btn btn-warning w-100"><span class="bi bi-cart3"></span> <span id="items-count">[0]</span> Items Added to Cart</button>
+    <table class="table table-hover">
+        <thead>
+            <tr>
+                <th>Title</th>
+                <th>Price</th>
+                <th>Preview</th>
+                <th>Remove</th>
+            </tr>
+        </thead>
+        <tbody id="cart-items">
+           
+        </tbody>
+    </table>
+</aside>
+
+<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+<script>
+    let categories = [];
+    let products = [];
+    let cartItems = [];
+    
+    function updateCartCount() {
+        document.getElementById('cart-count').textContent = cartItems.length;
+        document.getElementById('items-count').textContent = `[${cartItems.length}]`;
+    }
+
+
+    function loadProducts(url) {
+        fetch(url)
+            .then(response => response.json())
+            .then(data => {
+                products = data;
+                const productList = document.getElementById('product-list');
+                productList.innerHTML = '';
+                products.forEach(product => {
+                    const productCard = document.createElement('div');
+                    productCard.className = 'card p-2 m-2';
+                    productCard.style.width = '150px';
+                    productCard.innerHTML = `
+                        <img src="${product.image}" alt="No Image" class="card-img-top" height="100">
+                        <div class="card-header" style="height:110px;">
+                            <p class="card-title">${product.title}</p>
+                        </div>
+                        <div class="card-body">
+                            <dl>
+                                <dt>Price</dt>
+                                <dd>${product.price}</dd>
+                                <dt>Rating</dt>
+                                <dd class="bi bi-star-fill text-success">${product.rating.rate}<span>[${product.rating.count}]</span></dd>
+                            </dl>
+                        </div>
+                        <div class="card-footer">
+                            <button class="btn btn-danger w-100" onclick="addToCart(${product.id})">
+                                <span class="bi bi-cart4"> Add to Cart</span>
+                            </button>
+                        </div>
+                    `;
+                    productList.appendChild(productCard);
+                });
+            });
+    }
+
+    function addToCart(productId) {
+        fetch(`https://fakestoreapi.com/products/${productId}`)
+            .then(response => response.json())
+            .then(data => {
+                cartItems.push(data);
+                updateCartCount();
+                const cartItemsTable = document.getElementById('cart-items');
+                const itemRow = document.createElement('tr');
+                itemRow.innerHTML = `
+                    <td>${data.title}</td>
+                    <td>${data.price}</td>
+                    <td><img src="${data.image}" alt="No Image" class="cart-item-img"></td>
+                    <td><button class="btn btn-danger" onclick="removeFromCart(${data.id})"><span class="bi bi-trash"></span></button></td>
+                `;
+                cartItemsTable.appendChild(itemRow);
+            });
+    }
+
+    function removeFromCart(productId) {
+        const index = cartItems.findIndex(item => item.id === productId);
+        if (index !== -1) {
+            cartItems.splice(index, 1);
+            updateCartCount();
+            const cartItemsTable = document.getElementById('cart-items');
+            cartItemsTable.innerHTML = '';
+            cartItems.forEach(item => {
+                const itemRow = document.createElement('tr');
+                itemRow.innerHTML = `
+                    <td>${item.title}</td>
+                    <td>${item.price}</td>
+                    <td><img src="${item.image}" alt="No Image" class="cart-item-img"></td>
+                    <td><button class="btn btn-danger" onclick="removeFromCart(${item.id})"><span class="bi bi-trash"></span></button></td>
+                `;
+                cartItemsTable.appendChild(itemRow);
+            });
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+       
+        loadProducts('https://fakestoreapi.com/products');
+    });
+</script>
+</body>
+</html>
